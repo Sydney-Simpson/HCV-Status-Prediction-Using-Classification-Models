@@ -669,9 +669,10 @@ plt.xlabel('Age')
 
 
 
+<img width="822" height="525" alt="output_11_1" src="https://github.com/user-attachments/assets/2540fd8a-1374-4449-b08a-eb1a4ac2753d" />
 
     
-![png](output_11_1.png)
+
     
 
 
@@ -698,8 +699,9 @@ plt.xlabel('Age')
 
 
 
-    
-![png](output_13_1.png)
+<img width="822" height="525" alt="output_13_1" src="https://github.com/user-attachments/assets/5d733073-858a-4e37-a757-5faa9e367609" />
+
+
     
 
 
@@ -727,14 +729,15 @@ ax.set_title("Category Count by Disease State and Sex")
 
 
 
-    
-![png](output_15_1.png)
+<img width="1005" height="602" alt="output_15_1" src="https://github.com/user-attachments/assets/906691f6-3474-4b53-80a4-627efc2943e3" />
+
+
     
 
 
 # Prepare data for analysis
 * Drop Suspect Blood Donors as they aren't confirmed and there are so few of them. Including only 1 female sample.
-* Make 'Sex' a categorical 
+* Make Sex a categorical variable 
 
 ## Then combine all HCV positive samples under a single label, giving two categories Hepatitis C positive patient or Healthy Blood Donor
 #### We do this for a few reasons shown in the exploratory analysis above:
@@ -833,7 +836,8 @@ ax.set_title("Category Count by Sex")
 
 
     
-![png](output_21_1.png)
+<img width="1005" height="602" alt="output_21_1" src="https://github.com/user-attachments/assets/09d39280-56d2-4d9d-a59e-0c238f0a328e" />
+
     
 
 
