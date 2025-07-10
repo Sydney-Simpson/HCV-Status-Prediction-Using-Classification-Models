@@ -718,11 +718,7 @@ ax.set_title("Category Count by Disease State and Sex")
 
 
 
-    [Text(0, 0, '215'),
-     Text(0, 0, '1'),
-     Text(0, 0, '4'),
-     Text(0, 0, '8'),
-     Text(0, 0, '10')]
+    Text(0.5, 1.0, 'Category Count by Disease State and Sex')
 
 
 
@@ -827,7 +823,7 @@ ax.set_title("Category Count by Sex")
 
 
 
-    [Text(0, 0, '215'), Text(0, 0, '22')]
+    Text(0.5, 1.0, 'Category Count by Sex')
 
 
 
@@ -867,6 +863,8 @@ final_data.info()
     memory usage: 62.9+ KB
     
 
+# Split data into training and test sets
+
 
 ```python
 # Split data into a training set and a testing set
@@ -882,10 +880,13 @@ y = final_data['Category']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 42)
 ```
 
+# Start with a Decision Tree
+
 
 ```python
 # Time to train the model
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import plot_tree
 ```
 
 
@@ -1309,6 +1310,27 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 
 
 
+## What does our decision tree look like?
+
+
+```python
+plot_tree(dtree, feature_names = X.columns , class_names = ['HCV -', 'HCV +'], filled = True)
+plt.title("Decision Tree")
+```
+
+
+
+
+    Text(0.5, 1.0, 'Decision Tree')
+
+
+
+
+    
+![png](output_31_1.png)
+    
+
+
 
 ```python
 predictions = dtree.predict(X_test)
@@ -1344,7 +1366,7 @@ print(confusion_matrix(y_test, predictions))
      [  6  18]]
     
 
-# Train the model
+# Now use a Random Forest Model, which utilizes multiple decision trees
 
 
 ```python
@@ -1842,9 +1864,13 @@ plt.show()
 
 
     
-![png](output_44_0.png)
+![png](output_48_0.png)
     
 
+
+### ALP and AST are the most important features according to analysis based on permutations
+* AST stands for aspartate aminotransferase. It's an enzyme that speeds up chemical reactions in the body, it's found primarily in organs and tissues with relatively little found in blood. However, AST is released into the bloodstream following liver damage, or damage to AST producing cells. It makes sense that AST would be importnant here.
+* ALP stands for alkaline phosphatase, another enzyme found in the liver (as well as some other tissues and bone). It's believed to be involved in multiple processes. While it doesn't directly indicate liver damage or inflammation elevated levels signal a problem with bile flow or pressure within the liver.
 
 # What each features GINI index?
 * This is used to evaluate the quality of a split in a decision tree or purity. Since each node represents a split around a single feature we prefer nodes (and thus features) where samples are split and correctly classified. A lower index means a purer split, meaning data points in resulting nodes are more likely to belong to the same class.
@@ -1871,6 +1897,53 @@ fig.tight_layout()
 
 
     
-![png](output_48_0.png)
+![png](output_53_0.png)
     
 
+
+### Once again ALP and AST are the most important features, although their positions have switched.
+
+# Does our model also think the suspect Blood donor samples may be from HCV positive persons?
+### Remember to make Sex a categorical variable
+
+
+```python
+suspected_samples = all_data[all_data['Category'] == '0s=suspect Blood Donor']
+# Now drop the Category Column
+suspected_samples = suspected_samples.drop( axis = 'columns', columns = 'Category')
+
+suspected_samples = pd.get_dummies(suspected_samples, columns = ['Sex'])
+suspected_samples.info()
+```
+
+    <class 'pandas.core.frame.DataFrame'>
+    Index: 7 entries, 533 to 539
+    Data columns (total 13 columns):
+     #   Column  Non-Null Count  Dtype  
+    ---  ------  --------------  -----  
+     0   Age     7 non-null      int64  
+     1   ALB     7 non-null      float64
+     2   ALP     7 non-null      float64
+     3   AST     7 non-null      float64
+     4   BIL     7 non-null      float64
+     5   CHE     7 non-null      float64
+     6   CHOL    7 non-null      float64
+     7   CREA    7 non-null      float64
+     8   CGT     7 non-null      float64
+     9   PROT    7 non-null      float64
+     10  ALT     7 non-null      float64
+     11  Sex_f   7 non-null      bool   
+     12  Sex_m   7 non-null      bool   
+    dtypes: bool(2), float64(10), int64(1)
+    memory usage: 686.0 bytes
+    
+
+
+```python
+suspect_predictions = rfc.predict(suspected_samples)
+print(suspect_predictions)
+```
+
+    ['Blood Donor' 'Blood Donor' 'Blood Donor' 'Blood Donor' 'Blood Donor'
+     'Blood Donor' 'Hepatitis']
+    
