@@ -5,6 +5,8 @@
 [Exploratory Analysis](#Exploratory-Analysis) </br>
 [Data Cleaning and Manipulation](#Data-Cleaning-and-Manipulation) </br>
 [Decision Tree](#Decision-Tree) </br>
+[Random Forest](#Random-Forest) </br>
+[Model Features](#Model-Features)
 
 # Background
 Hepatitis C Virus (HCV) is a bloodborne pathogen and a causitive agent of liver disease. It causes a chronic progressive infection, leading to fibrosis and eventually cirrhosis of the liver. Until very recently HCV was incurable. However, it remains a public health concern.
@@ -293,14 +295,69 @@ When we use this decision tree on the test set we get the following report:
 ```python
               precision    recall  f1-score   support
 
- Blood Donor       0.98      0.98      0.98       161
-   Hepatitis       0.82      0.82      0.82        22
+ Blood Donor       0.99      0.98      0.98       161
+   Hepatitis       0.87      0.91      0.89        22
 
-    accuracy                           0.96       183
-   macro avg       0.90      0.90      0.90       183
-weighted avg       0.96      0.96      0.96       183
-
+    accuracy                           0.97       183
+   macro avg       0.93      0.95      0.94       183
+weighted avg       0.97      0.97      0.97       183
 ```
+
+And the following confusion matrix / sensitivity and specificity.
 
 <img width="559" height="453" alt="output_37_1" src="https://github.com/user-attachments/assets/6b0015ab-7105-4471-afcc-d77a88513894" />
 
+* Out of the 183 samples in the test dataset 161 were HCV - and 22 were HCV +
+* The model accurately predicted that 158/161 negative samples, and 20/22 positive samples.
+* However, there were 2 false negatives, and 3 false positives.
+
+# Random Forest
+
+Random forests are less straightforward. Instead of a single decision tree they create an ensemble of decision trees, where each tree is built using a random subset of data and features. This makes them more robust and accurate due to averaging predications from many trees. Random forests are also and less prone to overfitting. We can also use the same split data sets that were used previously for the decision tree.
+
+``` python
+
+from sklearn.ensemble import RandomForestClassifier
+rfc = RandomForestClassifier()
+rfc.fit(X_train, y_train)
+predictions = rfc.predict(X_test)
+
+```
+
+We get the following results using the random forest model: 
+
+```python
+              precision    recall  f1-score   support
+
+ Blood Donor       0.99      1.00      0.99       161
+   Hepatitis       1.00      0.91      0.95        22
+
+    accuracy                           0.99       183
+   macro avg       0.99      0.95      0.97       183
+weighted avg       0.99      0.99      0.99       183
+
+```
+
+<img width="559" height="453" alt="output_46_1" src="https://github.com/user-attachments/assets/3edb1421-7e42-44a0-8148-3d81017ebf03" />
+
+Notice that our accuracy has increased.
+* This model correctly predicted all negative samples.
+* However there are still 2 false positive samples.
+
+# Model Features
+Since a Random Forest model runs ensembles of decision trees with randomized samples and featured we can get aggregate data on what features are the most important. We'll do this in two ways:
+
+## Permutation importantance
+Permutation importance measures the contribution of each feature to the models statistical performance on a given dataset. It involves randomly shuffling the values of a single feature then observing how that impacts the model's performance. Particularly the f1 score.
+<img width="630" height="470" alt="output_51_0" src="https://github.com/user-attachments/assets/b5123f21-9811-4eeb-b400-1d2e70388f24" />
+
+ALP and AST are the most important features according to analysis based on permutations
+* AST stands for aspartate aminotransferase. It's an enzyme that speeds up chemical reactions in the body, it's found primarily in organs and tissues with relatively little found in blood. However, AST is released into the bloodstream following liver damage, or damage to AST producing cells. It makes sense that AST would be importnant here.
+* ALP stands for alkaline phosphatase, another enzyme found in the liver (as well as some other tissues and bone). It's believed to be involved in multiple processes. While it doesn't directly indicate liver damage or inflammation elevated levels signal a problem with bile flow or pressure within the liver.
+
+## gini index
+The gini index evaluates the quality of a split in a decision tree or the impurity. Ideally, all HCV- samples would be separated into one group and all HCV+ samples into another group creating two pure groups at that decision point. Obviously, that is a dream scenerio. So the gini index is a measure of impurity, so lower indexes are better. The graph below looks at the mean decrease in impurity by a given feature. This is not the exact gini index but another way to look at it. Values correlate with how much a feature lowers the impurity. Higher values means less impurity, and thus represent more importance features.
+
+<img width="630" height="470" alt="output_56_0" src="https://github.com/user-attachments/assets/96cc926f-6345-4b01-a350-9441b395ba7a" />
+
+Once again ALP and AST are the most important features, although their positions have switched.
