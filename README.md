@@ -6,7 +6,8 @@
 [Data Cleaning and Manipulation](#Data-Cleaning-and-Manipulation) </br>
 [Decision Tree](#Decision-Tree) </br>
 [Random Forest](#Random-Forest) </br>
-[Random Forest Model Features](#Random-Forest-Model-Features)
+[Random Forest Model Features](#Random-Forest-Model-Features) </br>
+[Gradient Boosting](#Gradient-Boosting)
 
 # Background
 Hepatitis C Virus (HCV) is a bloodborne pathogen and a causitive agent of liver disease. It causes a chronic progressive infection, leading to fibrosis and eventually cirrhosis of the liver. Until very recently HCV was incurable. However, it remains a public health concern.
@@ -361,3 +362,154 @@ The gini index evaluates the quality of a split in a decision tree or the impuri
 <img width="630" height="470" alt="output_56_0" src="https://github.com/user-attachments/assets/96cc926f-6345-4b01-a350-9441b395ba7a" />
 
 Once again ALP and AST are the most important features, although their positions have switched.
+
+# Gradient Boosting
+
+Gradient Boosting creates strong predictive models by sequentally combining multiple weaker models, like shallow decision trees. It works iteratively by adding new models which focus on correcting errors made by the existing ensemble. The algorithm works to minimize a loss function, in this case cross entropy since it's being used for classification. It has a few parameters we'll cover more in depth a bit later. 
+
+## Preparation
+However, first we need to do some data manipulation. The dataset contains a few Nan values, and traditional Gradient Boosting is unable to work with missing values. There are two options: 
+</br>
+1) A histogram boosting gradient classification is able to handle missing values natively. It learns how to handle them by determining at each node whether samples with missing values should go left or right based on the potential gain. This is the easier of the two options, as it doesn't actually require any data manipulation!
+</br>
+2) Imputing data to fill in missing values or remove rows containing missing values. This can be done in the following ways, though each has potential drawbacks:
+   </br>
+   * Removing rows with any missing values - this will lower our sample size
+   </br>
+   * Using the mean or median for each category of missing values - Since we have an unbalanced dataset, the average will skew more towards the healthy blood donor values, assuming that there is a difference between the groups. While we could separate groups and use mean or median values based on known disease status- such a technique is not possible for samples with unknown disease states (which are what this model is meant to be used for. That's a bit of a Catch-22!)
+   </br>
+   * Assigning values using a regression method based on the values that are present for that row - There are a few regression methods that can be employed for these predictions. And given our dataset this is the best option.   
+</br>
+   * Making missing values their own classification for prediction. For example there could be a node that sorts the datapoints based on whether or not they is missing ALT results. - This method makes little sense for our use case, as missing test results likely won't impact whether or not someone is predicted to have Hepatitis, it just means there was an issue during data collection or with the lab results.
+ </br>
+
+For simplicity, first we'll use the histogram gradient classification.
+
+``` python
+
+from sklearn.ensemble import HistGradientBoostingClassifier
+
+```
+
+First we load the package, then as with the random forest classification we create a class instance and fit our training data. 
+
+``` python
+
+hgbr = HistGradientBoostingClassifier()
+hgbr.fit(X_train, y_train)
+
+```
+
+To evaluate this model we're actually going to use the cross_val_score function from sklearn, you'll see why soon. This function performs a cross-validation process to evaluate and estimate a model's performance on unseen data. It does this by splitting the dataset into multiple folds, trains the model on a subset of these folds and then evaluates it on the remaining fold - kind of like what we did by separating the dataset with train_test_split. However, this is done for each fold and scores from each iteration are returned.
+
+``` python
+
+from sklearn.model_selection import GridSearchCV, cross_val_score
+cross_val_score(hgbr, X_train, y_train, cv =3, n_jobs =1).mean()
+
+```
+
+``` python
+
+0.9835347784104153
+
+```
+
+98.3% Is pretty good, but there is room for improvement.
+
+``` python
+ 
+predictions = hgbr.predict(X_test)
+print(classification_report(y_test, predictions))
+
+```
+
+```python
+
+              precision    recall  f1-score   support
+
+ Blood Donor       0.99      1.00      1.00       161
+   Hepatitis       1.00      0.95      0.98        22
+
+    accuracy                           0.99       183
+   macro avg       1.00      0.98      0.99       183
+weighted avg       0.99      0.99      0.99       183
+
+```
+This model is already an improvement over the Random Forest Classification. It correctly predicted ass negative samples, and only had 1 false negative prediction. This is why we needed to use the cross_val_score function to evaluate performance, as it is more robust to small tweaks and improvements. 
+<img width="559" height="453" alt="output_31_1" src="https://github.com/user-attachments/assets/6a01bdc6-9880-40f7-917c-efdafc39f08a" />
+
+Everything up until now has been similar to the Random Forest Classification method, here is where it gets a bit different. As the name suggests Gradient Boosting involves some boosting. This method allows a few parameter changes for optimization. The parameters are as follows:
+</br>
+* Learning rate
+* Max iterations
+* Max Depth
+</br>
+
+To optimize these parameters we'll create a grid of different values to test for each parameter. 
+``` python
+param_grid = {
+    'max_iter': [10, 50, 100, 500],
+    'learning_rate': [0.0001, 0.001, 0.01, 0.1, 1],
+    'max_depth': [3, 5, 7, 9]
+}
+```
+Next we use GridSearchCV to explore all parameter combinations with our training data.
+
+```python
+
+hgbr2 = GridSearchCV(hgbr, param_grid, cv=3, n_jobs=-1)
+hgbr2.fit(X_train, y_train)
+
+```
+We can then look at which combination of parameters are optimal.
+```python
+hgbr2.best_params_
+```
+
+```python
+
+{'learning_rate': 0.1, 'max_depth': 3, 'max_iter': 50}
+
+```
+As well as what score the model gives when using these parameters.
+```python
+
+hgbr2.best_score_
+
+```
+
+```python
+
+0.9882462624446443
+
+```
+We went from a score 98.35% to 98.8%. There wasn't much room to improve. 
+
+```python
+
+final_hgbr =  HistGradientBoostingClassifier(learning_rate = 0.1, max_depth = 3, max_iter = 100)
+final_hgbr = final_hgbr.fit(X_train, y_train)
+predictions = final_hgbr.predict(X_test)
+print(classification_report(y_test, predictions))
+
+```
+
+```python
+
+             precision    recall  f1-score   support
+
+ Blood Donor       0.98      1.00      0.99       159
+   Hepatitis       1.00      0.88      0.93        24
+
+    accuracy                           0.98       183
+   macro avg       0.99      0.94      0.96       183
+weighted avg       0.98      0.98      0.98       183
+
+```
+This 'improved' model has identical results to it's predicessor when using our training set. Once again, there is a single false positive prediction.
+
+
+<img width="559" height="453" alt="output_35_1" src="https://github.com/user-attachments/assets/153481e0-8974-45d2-9d64-9579052305e6" />
+
+
