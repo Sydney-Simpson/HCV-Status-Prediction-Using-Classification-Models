@@ -1,4 +1,4 @@
-# HCV-Status-Prediction-Using-a-Random-Forest-Classification-Model
+# HCV-Status-Prediction-Using-Classification-Models
 
 # Table of Contents
 [Background](#Background) </br>
@@ -6,7 +6,7 @@
 [Data Cleaning and Manipulation](#Data-Cleaning-and-Manipulation) </br>
 [Decision Tree](#Decision-Tree) </br>
 [Random Forest](#Random-Forest) </br>
-[Model Features](#Model-Features)
+[Random Forest Model Features](#Random-Forest-Model-Features)
 
 # Background
 Hepatitis C Virus (HCV) is a bloodborne pathogen and a causitive agent of liver disease. It causes a chronic progressive infection, leading to fibrosis and eventually cirrhosis of the liver. Until very recently HCV was incurable. However, it remains a public health concern.
@@ -344,7 +344,7 @@ Notice that our accuracy has increased.
 * This model correctly predicted all negative samples.
 * However there are still 2 false positive samples.
 
-# Model Features
+# Random Forest Model Features
 Since a Random Forest model runs ensembles of decision trees with randomized samples and featured we can get aggregate data on what features are the most important. We'll do this in two ways:
 
 ## Permutation importantance
