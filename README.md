@@ -201,6 +201,62 @@ Data are placed under the following 5 classifications based on disease state.
 * 2=Fibrosis - Samples from HCV positive patients with Fibrosis
 * 3=Cirrhosis - Samples from HCV positive patients with Cirrhosis
 
+## Missing values
+Finally, we evaluate the dataset for missing values. 
+
+```python
+features.isnull().sum()
+```
+```python
+Age      0
+Sex      0
+ALB      1
+ALP     18
+AST      0
+BIL      0
+CHE      0
+CHOL    10
+CREA     0
+CGT      0
+PROT     1
+ALT      1
+dtype: int64
+```
+So 18 samples are missing ALP, 10 are missing CHOL and 1 is missing ALT. There are a few ways to handle missing values, the easiest would be to remove these samples from the dataset. However, while there are a more than enough HCV- samples we don't want to remove too many HCV + samples.
+
+```python
+# Identify rows with null values
+rows_w_null = all_data.isnull().any(axis =1)
+
+# Create data frame of rows with null values
+null_df = all_data[rows_w_null]
+
+# Which Categories have missing values?
+counts = null_df['Category'].value_counts()
+counts
+
+```
+
+```python
+Category
+2=Fibrosis       9
+0=Blood Donor    7
+3=Cirrhosis      6
+1=Hepatitis      4
+Name: count, dtype: int64
+```
+7 HCV- blood donor samples have at least 1 missing value, while 19 of the HCV+ samples are missing one or more values.
+
+## Handling missing values
+There are a few ways to account for missing values. 
+1) Fill in missing values using mean/median of all samples or even create a regression model, to fill in values based on other features.
+2) Remove samples with missing values from the analysis
+3) Leave the missing values as they are.
+
+Decision Trees and Random Forest classification models can natively handle missing values. Leaving them in involves the least amount of alteration. While filling in the values with a mean or median may be an easy method to handle missing values, it follows the underlying assumption that the specific feature is not inherently different between the different disease states (ie ALP values are similar between HCV+ and HCV- persons). Under other select analyses one could use the mean or median by category (ie use the mean ALP from HCV- samples to fill in missing ALP values for HCV- samples), however since this is a classification model where the goal is to predict disease state that data would not be available.
+
+These values will need to be dealt with in order to create a Gradient Boosting Classification model, or a Histogram Gradient Boosting Model may be used.
+
 ## Distribution of data by age
 First, we combine the two dataframes into a single dataframe, this makes it easier to quickly look through the data. 
 
